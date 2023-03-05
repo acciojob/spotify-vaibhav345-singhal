@@ -249,8 +249,7 @@ public class SpotifyRepository {
         }
         playlistListenerMap.put(playlist1, temp);
 
-        if (creatorPlaylistMap.get(user1) != playlist1)
-            creatorPlaylistMap.put(user1, playlist1);
+        if (creatorPlaylistMap.get(user1) != playlist1) creatorPlaylistMap.put(user1, playlist1);
 
         List<Playlist> userplaylists = new ArrayList<>();
         if (userPlaylistMap.containsKey(user1)) {
@@ -264,63 +263,62 @@ public class SpotifyRepository {
     }
 
     public Song likeSong(String mobile, String songTitle) throws Exception {
-        User user1 = null;
-        Song song1 = null;
+        User curUser = new User();
         boolean userExist = false;
-        boolean songExist = false;
         for (User user : users) {
             if (user.getMobile().equals(mobile)) {
+                curUser = user;
                 userExist = true;
-                user1 = user;
+                break;
             }
         }
-
         if (!userExist) {
             throw new Exception("User does not exist");
         }
 
-        for (Song song : songs) {
-            if (song.getTitle().equals(songTitle)) {
+        Song song = new Song();
+        boolean songExist = false;
+        for (Song cursong : songs) {
+            if (cursong.getTitle().equals(songTitle)) {
+                song = cursong;
                 songExist = true;
-                song1 = song;
+                break;
             }
         }
         if (!songExist) {
             throw new Exception("Song does not exist");
         }
 
-        List<User> temp = new ArrayList<>();
-        if (songLikeMap.containsKey(song1)) {
-            temp = songLikeMap.get(song1);
+        List<User> users = new ArrayList<>();
+        if (songLikeMap.containsKey(song)) {
+            users = songLikeMap.get(song);
         }
+        if (!users.contains(curUser)) {
+            users.add(curUser);
+            songLikeMap.put(song, users);
+            song.setLikes(song.getLikes() + 1);
 
-        if (!temp.contains(user1)) {
-            temp.add(user1);
-            int currLikes = song1.getLikes();
-            song1.setLikes(song1.getLikes() + 1);
-            songLikeMap.put(song1, temp);
-        }
-
-        Album album = null;
-        for (Map.Entry<Album, List<Song>> albumListEntry : albumSongMap.entrySet()) {
-            for (Song song : albumListEntry.getValue()) {
-                if (song.getTitle().equals(songTitle)) {
-                    album = albumListEntry.getKey();
+            Album album = new Album();
+            for (Album curAlbum : albumSongMap.keySet()) {
+                List<Song> temp = albumSongMap.get(curAlbum);
+                if (temp.contains(song)) {
+                    album = curAlbum;
                     break;
                 }
             }
-        }
 
-        Artist artist = new Artist();
-        for (Artist artist1 : artistAlbumMap.keySet()) {
-            List<Album> albumList = artistAlbumMap.get(artist1);
-            if (albumList.contains(album)) {
-                artist = artist1;
-                break;
+            Artist artist = new Artist();
+            for (Artist curArtist : artistAlbumMap.keySet()) {
+                List<Album> temp = artistAlbumMap.get(curArtist);
+                if (temp.contains(album)) {
+                    artist = curArtist;
+                    break;
+                }
             }
+
+            artist.setLikes(artist.getLikes() + 1);
         }
-        artist.setLikes(artist.getLikes() + 1);
-        return song1;
+        return song;
     }
 
     public String mostPopularArtist() {
